@@ -1,4 +1,4 @@
-from constants import SUITS, RANKS
+from .constants import SUITS, RANKS
 
 
 class Card():

@@ -1,7 +1,7 @@
 import random
 
-from util import isRankSequence, isSameSuitSequence, isSequenceComplete, cardsFaceUp
-from stack import Stock, Column
+from .util import isRankSequence, isSameSuitSequence, isSequenceComplete, cardsFaceUp
+from .stack import Stock, Column
 
 class Game():
     def __init__(self, id):

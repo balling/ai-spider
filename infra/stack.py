@@ -1,7 +1,7 @@
 import random
-from card import Card
-from constants import RANKS, SUITS, DECKS
-from util import isSameSuitSequence, isRankSequence
+from .card import Card
+from .constants import RANKS, SUITS, DECKS
+from .util import isSameSuitSequence, isRankSequence
 
 class Stack():
     def __init__(self, game):
@@ -29,6 +29,12 @@ class Stack():
 
     def __repr__(self):
         return 'Column[%d]' % self.id
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def __gt__(self, other):
+        return self.id > other.id
 
 
 class Column(Stack):

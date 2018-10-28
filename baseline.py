@@ -7,7 +7,7 @@ def main():
     win_count = 0
     count = 10000
     try:
-        with open('output/baseline-1suit.csv', 'wb') as csvfile:
+        with open('output/baseline-1suit.csv', 'w') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(('ID', 'Result', 'Score', '#Moves', '#Stacks'))
             for i in range(count):

@@ -1,4 +1,4 @@
-from constants import RANKS
+from .constants import RANKS
 
 
 def cardsFaceUp(cards):
