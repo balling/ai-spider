@@ -105,15 +105,49 @@ class Game():
     
     def getState(self):
         return tuple(tuple(stack.cards) for stack in self.allstacks)
-    
+
+    # According to this method, we can simply say the size of state space equals to 104 + 10 + 1
+    # the action should be move or deal
+    # (avoid too complex action space, we set every move we only move the valid move 0)
+
+    def getStateForDQN(self):
+        # the corresponding card, first the stock all should be zeros, the flipped card should also be zero
+        # the agent should not know what happen in the covered cards
+        state = [0] * len(self.stock.cards)
+        for column in self.columns:
+            for card in column.cards:
+                if card.face_up == False:
+                    state.append(0)
+                else:
+                    state.append(card.rank + 1)
+        if len(state) != 104:
+            state.extend([14] * (104 - len(state)))
+        # calculate column number
+        columnNum = [len(column.cards) for column in self.columns]
+        state.extend(columnNum)
+        # calculate the stock card numbers
+        state.append(len(self.stock.cards))
+        return state
+
+    def performMovesForDQN(self, action):
+        # only having two action, the first one should be move,
+        # the second one should be deal
+        moves = self.getValidMoves()
+        if action == 1 and moves[0][1] != 'deal': # move
+            action_temp = moves[0]
+        else:
+            action_temp = moves[-1]
+        self.performMoves(action_temp)
+        return action
+
     def won(self):
         return self.completed == 8
 
     def __repr__(self):
         ret = ''
         for i in range(max(len(c.cards) for c in self.columns)):
-            ret += ' '.join((str(c.cards[i]) if len(c.cards)
-                            > i else '      ' for c in self.columns))
+            ret += ' '.join((str(c.cards[i]) if len(c.cards) > i
+                             else '      ' for c in self.columns))
             ret += '\n'
         ret += 'Game#%d Score: %d   Moves: %d   Completed: %d   Undealt: %d' % \
         (self.id, self.score, self.moves, self.completed, len(self.stock.cards)/10)
