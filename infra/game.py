@@ -34,8 +34,8 @@ class Game():
         cards = from_stack.cards[-ncards:]
         if not from_stack is self.stock:
             assert to_stack.acceptsCards(cards)
-            self.score -= 1
-            self.moves += 1
+            # self.score -= 1
+            # self.moves += 1
         for _ in range(ncards):
             from_stack.removeCard()
         for c in cards:
@@ -103,8 +103,29 @@ class Game():
             self.stock.dealRow(flip=1)
             self.score -= 1
     
+    def performMovesQ(self, move):
+        state = self.getState()
+        self.moves += 1
+        score = -1
+        if move[0] == 'move':
+            _, fromi, toi, ncards = move
+            from_stack = self.columns[fromi]
+            to_stack = self.columns[toi]
+            score = self.move(ncards, from_stack, to_stack)
+            if score > 0:
+                self.completed += 1
+            else:
+                self.states.add(state + move)
+        elif move[0] == 'deal':
+            self.stock.dealRow(flip=1)
+        self.score += score
+        return self.getVisibleState(), score
+
     def getState(self):
         return tuple(tuple(stack.cards) for stack in self.allstacks)
+    
+    def getVisibleState(self):
+        return (len(self.stock.cards),) + tuple(tuple((card.suit, card.rank) if card.face_up else () for card in stack.cards) for stack in self.columns)
 
     # According to this method, we can simply say the size of state space equals to 104 + 10 + 1
     # the action should be move or deal
