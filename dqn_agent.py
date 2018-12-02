@@ -55,7 +55,7 @@ class Agent():
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
 
-    def act(self, state, eps=0.):
+    def act(self, state, moves, eps=0.):
         """Returns actions for given state as per current policy.
         
         Params
@@ -68,12 +68,15 @@ class Agent():
         with torch.no_grad():
             action_values = self.qnetwork_local(state)
         self.qnetwork_local.train()
-
+        valid_actions = [1080 if move==('deal',) else (move[1]*9+move[2]-(move[1]<move[2]))*12+move[3]-1 for move in moves]
         # Epsilon-greedy action selection
         if random.random() > eps:
-            return np.argmax(action_values.cpu().data.numpy())
+            actions = action_values.cpu().data.numpy().take(valid_actions)
+            chosen = valid_actions[np.argmax(actions)]
+            return chosen
+            #return np.argmax(action_values.cpu().data.numpy())
         else:
-            return random.choice(np.arange(self.action_size))
+            return random.choice(np.array(valid_actions))
 
     def learn(self, experiences, gamma):
         """Update value parameters using given batch of experience tuples.

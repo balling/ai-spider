@@ -1,16 +1,27 @@
 from infra.game import Game
 from infra.util import getValidMoves
 from mdp.qlearning import QLearningAlgorithm
-import random, csv, pickle
+import random, csv, pickle, math
 
 
-def identityFeatureExtractor(state, action):
-    featureKey = (state, action)
-    featureValue = 1
-    return [(featureKey, featureValue)]
+def featureExtractor(state, action):
+    features = []
+    hasStock = state[0] > 0
+    numCards = [len(col) for col in state[1:]]
+    numFaceCards = [sum([1 for card in col if len(card)>0]) for col in state[1:]]
+    if action[0] == 'move':
+        _, f, t, n = action
+        for i, nc in enumerate(numCards):
+            if i==f:
+                features.append(((hasStock, nc, numFaceCards[i], -n), 3))
+            elif i==t:
+                features.append(((hasStock, nc, numFaceCards[i], n), 3))
+    return features
 
+def getStepSize(numIters):
+    return 1.0 / max(1, math.log10(numIters+1)-5)
 
-def learn(rl, numTrials=50000, verbose=False):
+def learn(rl, numTrials=300000, verbose=False):
     totalRewards = []  # The rewards we get on each trial
     wins = 0
     discount = 0.99
@@ -27,7 +38,7 @@ def learn(rl, numTrials=50000, verbose=False):
                 break
             newState, reward = game.performMovesQ(action)
             if game.won():
-                reward += 10000
+                reward += 1000000
                 wins += 1
             rl.incorporateFeedback(state, action, reward, newState)
             totalReward += reward
@@ -38,7 +49,6 @@ def learn(rl, numTrials=50000, verbose=False):
             print("win ratio %d/%d = %f, state space explored: %d" % (wins, trial+1, wins/(trial+1), len(rl.weights)))
         totalRewards.append(totalReward)
         rl.resetCache()
-        rl.numIters=0
     return totalRewards
     
 
@@ -48,7 +58,7 @@ def evaluate(rl):
     count = 1000
     rl.explorationProb = 0
     try:
-        with open('output/qlearning-1suit.csv', 'w') as csvfile:
+        with open('output/qlearning-1suit-no-extra-reward.csv', 'w') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(('ID', 'Result', 'Score', '#Moves', '#Stacks'))
             for i in range(count):
@@ -76,12 +86,12 @@ def evaluate(rl):
 
 
 if __name__ == "__main__":
-    rl = QLearningAlgorithm(getValidMoves, 0.99, identityFeatureExtractor)
+    rl = QLearningAlgorithm(getValidMoves, 0.99, featureExtractor, getStepSize=getStepSize, explorationProb=0.02)
     learn(rl, verbose=True)
     evaluate(rl)
-    # with open('weights.pickle', 'wb') as picklefile:
-    #     print(len(rl.weights))
-    #     pickle.dump(rl.weights, picklefile)
+    with open('weights-approx-no-extra-reward.pickle', 'wb') as picklefile:
+        print(len(rl.weights))
+        pickle.dump(rl.weights, picklefile)
     # game = Game(1)
     # game.createGame((0,0,0,0))
     # game.startGame()

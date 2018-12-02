@@ -1,6 +1,6 @@
 import random
 
-from .util import isRankSequence, isSameSuitSequence, isSequenceComplete, cardsFaceUp
+from .util import isRankSequence, isSameSuitSequence, isSequenceComplete, cardsFaceUp, getValidMoves
 from .stack import Stock, Column
 
 class Game():
@@ -153,13 +153,32 @@ class Game():
     def performMovesForDQN(self, action):
         # only having two action, the first one should be move,
         # the second one should be deal
-        moves = self.getValidMoves()
-        if action == 1 and moves[0][1] != 'deal': # move
-            action_temp = moves[0]
+        # moves = self.getValidMoves()
+        # if action == 1 and moves[0][1] != 'deal': # move
+        #     action_temp = moves[0]
+        # else:
+        #     action_temp = moves[-1]
+        # self.performMoves(action_temp)
+        # return action
+        moves = getValidMoves(self.getVisibleState())
+        if action == 1080:
+            if ('deal',) in moves:
+                self.performMovesQ(('deal',))
+            else:
+                self.moves += 1
+                self.score -= 1
         else:
-            action_temp = moves[-1]
-        self.performMoves(action_temp)
-        return action
+            piles, ncards = divmod(action, 12)
+            ncards += 1
+            fromi, toi = divmod(piles, 9)
+            if toi >= fromi:
+                toi += 1
+            move = ('move', fromi, toi, ncards)
+            if move in moves:
+                self.performMovesQ(move)
+            else:
+                self.moves += 1
+                self.score -= 1
 
     def won(self):
         return self.completed == 8

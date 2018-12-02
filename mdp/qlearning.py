@@ -2,9 +2,11 @@ import collections
 import random
 import math
 
+def getStepSize(numIters):
+    return 1.0 / math.sqrt(numIters)
 
 class QLearningAlgorithm():
-    def __init__(self, actions, discount, featureExtractor, explorationProb=0.2):
+    def __init__(self, actions, discount, featureExtractor, explorationProb=0.2, getStepSize=getStepSize):
         self.actions = actions
         self.discount = discount
         self.featureExtractor = featureExtractor
@@ -12,6 +14,7 @@ class QLearningAlgorithm():
         self.weights = collections.defaultdict(float)
         self.numIters = 0
         self.cache = collections.defaultdict(set)
+        self.getStepSize = getStepSize
 
     # Return the Q function associated with the weights and features
     def getQ(self, state, action):
@@ -36,16 +39,12 @@ class QLearningAlgorithm():
         self.cache[state].add(choice)
         return choice
 
-    # Call this function to get the step size to update the weights.
-    def getStepSize(self):
-        return 1.0 / math.sqrt(self.numIters)
-
     # We will call this function with (s, a, r, s'), which you should use to update |weights|.
     # Note that if s is a terminal state, then s' will be None.  Remember to check for this.
     # You should update the weights using self.getStepSize(); use
     # self.getQ() to compute the current estimate of the parameters.
     def incorporateFeedback(self, state, action, reward, newState):
-        eta = self.getStepSize()
+        eta = self.getStepSize(self.numIters)
         q = self.getQ(state, action)
         v = 0
         if newState:
