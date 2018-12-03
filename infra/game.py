@@ -1,4 +1,5 @@
 import random
+from functools import reduce
 
 from .util import isRankSequence, isSameSuitSequence, isSequenceComplete, cardsFaceUp, getValidMoves
 from .stack import Stock, Column
@@ -83,7 +84,8 @@ class Game():
                     move = (len(pile), 'move', len(pile), from_stack, to_stack)
                 if move and (state + move not in self.states):
                     moves.append(move)
-        if self.stock.canDealCards():
+        has_empty = reduce((lambda x, y: x or not y), self.columns, False)
+        if self.stock.canDealCards() and not has_empty:
             moves.append((-1, 'deal'))
         moves.sort(reverse=True)
         return moves
