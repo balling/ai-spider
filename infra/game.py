@@ -136,20 +136,14 @@ class Game():
     def getStateForDQN(self):
         # the corresponding card, first the stock all should be zeros, the flipped card should also be zero
         # the agent should not know what happen in the covered cards
-        state = [0] * len(self.stock.cards)
+        state = [len(self.stock.cards)]
         for column in self.columns:
-            for card in column.cards:
-                if card.face_up == False:
-                    state.append(0)
-                else:
-                    state.append(card.rank + 1)
-        if len(state) != 104:
-            state.extend([14] * (104 - len(state)))
-        # calculate column number
-        columnNum = [len(column.cards) for column in self.columns]
-        state.extend(columnNum)
-        # calculate the stock card numbers
-        state.append(len(self.stock.cards))
+            hidden = len([card for card in column.cards if not card.face_up])
+            pile = column.getPile()
+            state.append(hidden)
+            state.append(len(column.cards)-hidden-len(pile))
+            state.extend(card.rank for card in pile)
+            state.extend([-1] * (12-len(pile)))
         return state
 
     def performMovesForDQN(self, action):

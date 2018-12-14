@@ -9,11 +9,11 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64         # minibatch size
-GAMMA = 0.99            # discount factor
+BATCH_SIZE = 256         # minibatch size
+GAMMA = 0.999            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR = 5e-4               # learning rate 
-UPDATE_EVERY = 4        # how often to update the network
+LR = 5e-3               # learning rate 
+UPDATE_EVERY = 32        # how often to update the network
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -37,6 +37,7 @@ class Agent():
         self.qnetwork_local = QNetwork(state_size, action_size, seed, 256, 512).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, seed, 256, 512).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
+        self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[5000, 10000], gamma=0.3)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
@@ -54,6 +55,7 @@ class Agent():
             if len(self.memory) > BATCH_SIZE:
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
+                self.scheduler.step()
 
     def act(self, state, moves, eps=0.):
         """Returns actions for given state as per current policy.
